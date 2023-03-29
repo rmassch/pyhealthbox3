@@ -26,7 +26,7 @@ class Healthbox3Room:
 
     boost: Healthbox3RoomBoost = Healthbox3RoomBoost()
     enabled_sensors: list[str] = []
-
+    
     def __init__(self, room_id: int, room_data: object, advanced_features: bool = False) -> None:
         """Initialize the HB3 Room."""
         self._advanced_features = advanced_features
@@ -92,18 +92,37 @@ class Healthbox3Room:
         return aqi
 
     @property
-    def indoor_volatile_organic_compounds(self) -> Decimal | None:
-        """HB3 Indoor Volatile Organic Compounds"""
-        voc = None
+    def indoor_voc_ppm(self) -> Decimal | None:
+        """HB3 Volatile Organic Compounds."""
+        ppm = None
         sensor_type: str = "indoor volatile organic compounds"
         if self._advanced_features and sensor_type in self.enabled_sensors:
-            voc = [
+            ppm = [
                 sensor["parameter"]["concentration"]["value"]
                 for sensor in self.sensors_data
                 if sensor_type in sensor["type"]
             ][0]
-        return voc
+        return ppm
     
+    @property
+    def indoor_voc_microg_per_cubic(self) -> Decimal | None:
+        """HB3 Volatile Organic Compounds."""
+        mgpc = None
+        sensor_type: str = "indoor volatile organic compounds"
+        if self._advanced_features and sensor_type in self.enabled_sensors:
+            mgpc = [
+                sensor["parameter"]["concentration"]["value"]
+                for sensor in self.sensors_data
+                if sensor_type in sensor["type"]
+            ][0] * 1000
+        return mgpc
+
+
+     
+
+
+
+
 class Healthbox3DataObject:
     """Healthbox3 Data Object."""
 
