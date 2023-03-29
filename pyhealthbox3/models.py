@@ -97,7 +97,7 @@ class Healthbox3Room:
         voc = None
         sensor_type: str = "indoor volatile organic compounds"
         if self._advanced_features and sensor_type in self.enabled_sensors:
-            aqi = [
+            voc = [
                 sensor["parameter"]["concentration"]["value"]
                 for sensor in self.sensors_data
                 if sensor_type in sensor["type"]
