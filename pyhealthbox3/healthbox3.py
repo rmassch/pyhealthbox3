@@ -29,9 +29,12 @@ class Healthbox3():
         self._close_session = False
 
         if api_key:
-            self._advanced_features = True
             self._api_key = api_key
         
+    @property
+    def advanced_api_enabled(self) -> bool:
+        """Return whether advanced api is enabled."""
+        return self._advanced_features
 
     @property
     def host(self) -> str:
@@ -130,6 +133,7 @@ class Healthbox3():
         if authentication_status["state"] != "valid":
             return False
         else:
+            self._advanced_features = True
             return True
 
     async def request(self, endpoint: str, method: str = METH_GET, data: object = None, headers: dict = None, expect_json_error: bool = False) -> any:

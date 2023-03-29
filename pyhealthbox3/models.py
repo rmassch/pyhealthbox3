@@ -25,6 +25,7 @@ class Healthbox3Room:
     """Healthbox 3 Room object."""
 
     boost: Healthbox3RoomBoost = Healthbox3RoomBoost()
+    enabled_sensors: list[str] = []
 
     def __init__(self, room_id: int, room_data: object, advanced_features: bool = False) -> None:
         """Initialize the HB3 Room."""
@@ -33,6 +34,7 @@ class Healthbox3Room:
         self.name: str = room_data["name"]
         self.type: str = room_data["type"]
         self.sensors_data: list = room_data["sensor"]
+        self.enabled_sensors = [sensor["type"] for sensor in self.sensors_data]
         self.room_type: str = room_data["type"]
 
 
@@ -40,11 +42,12 @@ class Healthbox3Room:
     def indoor_temperature(self) -> Decimal | None:
         """HB3 Indoor Temperature."""
         temperature = None
-        if self._advanced_features:
+        sensor_type: str = "indoor temperature"
+        if self._advanced_features and sensor_type in self.enabled_sensors:
             temperature = [
                 sensor["parameter"]["temperature"]["value"]
                 for sensor in self.sensors_data
-                if "temperature" in sensor["parameter"]
+                if sensor_type in sensor["type"]
             ][0]
         return temperature
 
@@ -52,11 +55,12 @@ class Healthbox3Room:
     def indoor_humidity(self) -> Decimal | None:
         """HB3 Indoor Humidity."""
         humidity = None
-        if self._advanced_features:
+        sensor_type: str = "indoor relative humidity" 
+        if self._advanced_features and sensor_type in self.enabled_sensors:
             humidity =  [
                 sensor["parameter"]["humidity"]["value"]
                 for sensor in self.sensors_data
-                if "humidity" in sensor["parameter"]
+                if sensor_type in sensor["type"]
             ][0]
         return humidity
 
@@ -64,11 +68,12 @@ class Healthbox3Room:
     def indoor_co2_concentration(self) -> Decimal | None:
         """HB3 Indoor CO2 Concentration."""
         co2_concentration = None
-        if self._advanced_features:
+        sensor_type: str = "indoor CO2"
+        if self._advanced_features and sensor_type in self.enabled_sensors:
             co2_concentration = [
                 sensor["parameter"]["concentration"]["value"]
                 for sensor in self.sensors_data
-                if "concentration" in sensor["parameter"]
+                if sensor_type in sensor["type"]
             ][0]
         return co2_concentration
 
@@ -77,15 +82,28 @@ class Healthbox3Room:
     def indoor_aqi(self) -> Decimal | None:
         """HB3 Indoor Air Quality Index."""
         aqi = None
-        if self._advanced_features:
+        sensor_type: str = "indoor air quality index"
+        if self._advanced_features and sensor_type in self.enabled_sensors:
             aqi = [
                 sensor["parameter"]["index"]["value"]
                 for sensor in self.sensors_data
-                if "index" in sensor["parameter"]
+                if sensor_type in sensor["type"]
             ][0]
         return aqi
 
-
+    @property
+    def indoor_volatile_organic_compounds(self) -> Decimal | None:
+        """HB3 Indoor Volatile Organic Compounds"""
+        voc = None
+        sensor_type: str = "indoor volatile organic compounds"
+        if self._advanced_features and sensor_type in self.enabled_sensors:
+            aqi = [
+                sensor["parameter"]["concentration"]["value"]
+                for sensor in self.sensors_data
+                if sensor_type in sensor["type"]
+            ][0]
+        return voc
+    
 class Healthbox3DataObject:
     """Healthbox3 Data Object."""
 
