@@ -47,6 +47,11 @@ class Healthbox3():
         return self._data.serial
 
     @property
+    def description(self) -> str:
+        """Return the Model Description."""
+        return self._data.description
+    
+    @property
     def warranty_number(self) -> str:
         """Return the warranty number of the device."""
         return self._data.warranty_number
