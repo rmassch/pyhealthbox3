@@ -36,6 +36,8 @@ class Healthbox3Room:
         self.sensors_data: list = room_data["sensor"]
         self.enabled_sensors = [sensor["type"] for sensor in self.sensors_data]
         self.room_type: str = room_data["type"]
+        self._parameters: dict = room_data["parameter"]
+        self._actuator: list[dict] = room_data["actuator"]
 
 
     @property
@@ -116,6 +118,17 @@ class Healthbox3Room:
                 if sensor_type in sensor["type"]
             ][0] * 1000
         return mgpc
+    
+    @property
+    def airflow_ventilation_rate(self) -> float | None:
+        """HB3 Airflow Ventilation Rate"""
+        
+        nominal: float = self._parameters["nominal"]["value"]
+        offset: float = self._parameters["offset"]["value"]
+        air_valve_flow_rate: float = [ x["parameter"]["flow_rate"]["value"] for x in self._actuator][0]
+        ventilation_rate = air_valve_flow_rate / (nominal + offset)
+
+        return ventilation_rate
 
 
      
