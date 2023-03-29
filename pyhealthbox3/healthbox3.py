@@ -110,14 +110,13 @@ class Healthbox3():
     async def async_enable_advanced_api_features(self):
         """Enable advanced API Features."""
         if self._api_key:
-            if await self._async_validate_advanced_api_features() == False:
-                await self.request(
-                    method=METH_POST,
-                    endpoint="/v2/api/api_key",
-                    data=f"{self._api_key}",
-                    expect_json_error=True,
-                )
-            await asyncio.sleep(2)
+            await self.request(
+                method=METH_POST,
+                endpoint="/v2/api/api_key",
+                data=f"{self._api_key}",
+                expect_json_error=True,
+            )
+            await asyncio.sleep(5)
             if await self._async_validate_advanced_api_features() == False:
                 await self.close()
                 raise Healthbox3ApiClientAuthenticationError
