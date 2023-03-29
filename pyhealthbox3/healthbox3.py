@@ -92,7 +92,7 @@ class Healthbox3():
         data = {"enable": False}
         await self.request(
             method=METH_PUT,
-            endpoint="f/v2/api/boost/{room_id}",
+            endpoint=f"/v2/api/boost/{room_id}",
             data=data,
         )
 
