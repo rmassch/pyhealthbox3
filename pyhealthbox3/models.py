@@ -38,6 +38,7 @@ class Healthbox3Room:
         self.room_type: str = room_data["type"]
         self._parameters: dict = room_data["parameter"]
         self._actuator: list[dict] = room_data["actuator"]
+        self._profile: str = room_data["profile_name"]
 
 
     @property
@@ -121,16 +122,19 @@ class Healthbox3Room:
     
     @property
     def airflow_ventilation_rate(self) -> float | None:
-        """HB3 Airflow Ventilation Rate"""
+        """HB3 Airflow Ventilation Rate."""
         
         nominal: float = self._parameters["nominal"]["value"]
         offset: float = self._parameters["offset"]["value"]
-        air_valve_flow_rate: float = [ x["parameter"]["flow_rate"]["value"] for x in self._actuator][0]
+        air_valve_flow_rate: float = [ x["parameter"]["flow_rate"]["value"] for x in self._actuator if x["type"] == "air valve" ][0] 
         ventilation_rate = air_valve_flow_rate / (nominal + offset)
 
         return ventilation_rate
 
-
+    @property
+    def profile_name(self) -> str | None:
+        """HB3 Room Profile Name."""
+        return self._profile.capitalize()
      
 
 
