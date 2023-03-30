@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyhealthbox3"
-version = "0.0.13"
+version = "0.0.14"
 authors = [
   { name="rmassch", email="1083135+rmassch@users.noreply.github.com" },
 ]
