@@ -47,11 +47,7 @@ class Healthbox3Room:
         temperature = None
         sensor_type: str = "indoor temperature"
         if self._advanced_features and sensor_type in self.enabled_sensors:
-            temperature = [
-                sensor["parameter"]["temperature"]["value"]
-                for sensor in self.sensors_data
-                if sensor_type in sensor["type"]
-            ][0]
+            temperature = self._get_sensor_value(sensor_type)
         return temperature
 
     @property
@@ -60,11 +56,7 @@ class Healthbox3Room:
         humidity = None
         sensor_type: str = "indoor relative humidity" 
         if self._advanced_features and sensor_type in self.enabled_sensors:
-            humidity =  [
-                sensor["parameter"]["humidity"]["value"]
-                for sensor in self.sensors_data
-                if sensor_type in sensor["type"]
-            ][0]
+            humidity = self._get_sensor_value(sensor_type)
         return humidity
 
     @property
@@ -73,13 +65,8 @@ class Healthbox3Room:
         co2_concentration = None
         sensor_type: str = "indoor CO2"
         if self._advanced_features and sensor_type in self.enabled_sensors:
-            co2_concentration = [
-                sensor["parameter"]["concentration"]["value"]
-                for sensor in self.sensors_data
-                if sensor_type in sensor["type"]
-            ][0]
+            co2_concentration = self._get_sensor_value(sensor_type)
         return co2_concentration
-
 
     @property
     def indoor_aqi(self) -> Decimal | None:
@@ -87,11 +74,7 @@ class Healthbox3Room:
         aqi = None
         sensor_type: str = "indoor air quality index"
         if self._advanced_features and sensor_type in self.enabled_sensors:
-            aqi = [
-                sensor["parameter"]["index"]["value"]
-                for sensor in self.sensors_data
-                if sensor_type in sensor["type"]
-            ][0]
+            aqi = self._get_sensor_value(sensor_type)
         return aqi
 
     @property
@@ -100,11 +83,7 @@ class Healthbox3Room:
         ppm = None
         sensor_type: str = "indoor volatile organic compounds"
         if self._advanced_features and sensor_type in self.enabled_sensors:
-            ppm = [
-                sensor["parameter"]["concentration"]["value"]
-                for sensor in self.sensors_data
-                if sensor_type in sensor["type"]
-            ][0]
+            ppm = self._get_sensor_value(sensor_type)
         return ppm
     
     @property
@@ -113,11 +92,9 @@ class Healthbox3Room:
         mgpc = None
         sensor_type: str = "indoor volatile organic compounds"
         if self._advanced_features and sensor_type in self.enabled_sensors:
-            mgpc = [
-                sensor["parameter"]["concentration"]["value"]
-                for sensor in self.sensors_data
-                if sensor_type in sensor["type"]
-            ][0] * 1000
+            mgpc = self._get_sensor_value(sensor_type)
+            if mgpc:
+                mgpc = mgpc * 1000
         return mgpc
     
     @property
@@ -136,6 +113,34 @@ class Healthbox3Room:
         """HB3 Room Profile Name."""
         return self._profile.capitalize()
      
+    def _validate_sensor(self, sensor: dict, sensor_key: str) -> bool:
+        """Validate the sensor."""
+        valid: bool = False
+        if "parameter" in sensor:
+
+            "Sensors are sometimes empty ..."
+            if sensor_key in sensor["parameter"]:
+                valid =  True
+            
+        return valid
+
+    def _get_sensor_value(self, sensor_type: str) -> float | None:
+        """Get sensor value."""
+        sensor_type_keys: dict = {
+            "indoor volatile organic compounds": "concentration",
+            "indoor volatile organic compounds": "concentration",
+            "indoor air quality index": "index",
+            "indoor CO2": "concentration",
+            "indoor relative humidity": "humidity",
+            "indoor temperature": "temperature"
+        }
+        sensor: dict = [sensor for sensor in self.sensors_data if sensor_type in sensor["type"]][0]
+        sensor_key = sensor_type_keys[sensor_type]
+        valid = self._validate_sensor(sensor, sensor_key=sensor_key)
+        if valid:
+            return sensor["parameter"][sensor_key]["value"]
+        else:
+            return None
 
 
 
