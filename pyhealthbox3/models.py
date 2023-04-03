@@ -100,12 +100,7 @@ class Healthbox3Room:
     @property
     def airflow_ventilation_rate(self) -> float | None:
         """HB3 Airflow Ventilation Rate."""
-        
-        nominal: float = self._parameters["nominal"]["value"]
-        offset: float = self._parameters["offset"]["value"]
-        air_valve_flow_rate: float = [ x["parameter"]["flow_rate"]["value"] for x in self._actuator if x["type"] == "air valve" ][0] 
-        ventilation_rate = air_valve_flow_rate / (nominal + offset)
-
+        ventilation_rate = self._get_airflow_ventilation_rate()
         return ventilation_rate
 
     @property
@@ -123,6 +118,40 @@ class Healthbox3Room:
                 valid =  True
             
         return valid
+
+    def _get_airflow_ventilation_rate(self) -> float | None:
+        """Extract the airflow ventilation rate."""
+        nominal: float = None
+        offset: float = None
+        flow_rate: float = None
+
+        # Nominal
+        try:
+            nominal = self._parameters["nominal"]["value"]
+        except KeyError:
+            return None
+
+        # Offset
+        try:
+            offset = self._parameters["offset"]["value"]
+        except KeyError:            
+            offset = 0
+
+        # Flow Rate
+        flow_rate_sensors: list[dict] = [
+            x for x in self._actuator if x["type"] == "air valve"
+        ]
+        if len(flow_rate_sensors) == 0:
+            return None
+        
+        try:
+            flow_rate: float = flow_rate_sensors[0]["parameter"]["flow_rate"]["value"]
+        except KeyError:
+            return None
+
+
+        ventilation_rate: float = flow_rate / (nominal + offset)
+        return ventilation_rate
 
     def _get_sensor_value(self, sensor_type: str) -> float | None:
         """Get sensor value."""
