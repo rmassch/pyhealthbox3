@@ -9,7 +9,6 @@ import async_timeout
 
 import logging
 
-from socket import *
 from .models import Healthbox3DataObject, Healthbox3Room, Healthbox3RoomBoost
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +72,7 @@ class Healthbox3():
         )
         self._data = Healthbox3DataObject(general_data, advanced_features=self._advanced_features)
         for room in self._data.rooms:
+            _LOGGER.debug(f"Found room: {room.name}")
             room.boost = await self.async_get_room_boost_data(room_id=room.room_id)
         return general_data
 
@@ -110,21 +110,27 @@ class Healthbox3():
     async def async_enable_advanced_api_features(self):
         """Enable advanced API Features."""
         if self._api_key:
-            await self.request(
-                method=METH_POST,
-                endpoint="/v2/api/api_key",
-                data=f"{self._api_key}",
-                expect_json_error=True,
-            )
-            await asyncio.sleep(5)
-            if await self._async_validate_advanced_api_features() == False:
-                await self.close()
-                raise Healthbox3ApiClientAuthenticationError
+            already_valid = await self._async_validate_advanced_api_features()
+            if not already_valid:
+                _LOGGER.debug("Enabling Advanced API.")
+                await self.request(
+                    method=METH_POST,
+                    endpoint="/v2/api/api_key",
+                    data=f"{self._api_key}",
+                    expect_json_error=True,
+                )
+                await asyncio.sleep(5)
+                if await self._async_validate_advanced_api_features() == False:
+                    await self.close()
+                    raise Healthbox3ApiClientAuthenticationError
+            else:
+                _LOGGER.debug("Advanced API already enabled.")
         else:
             raise Healthbox3ApiClientAuthenticationError
 
     async def async_validate_connectivity(self):
         """Validate API Connectivity."""
+        _LOGGER.debug("Validating Connectivity")
         await self.request(
             method=METH_GET, endpoint="/v2/api/data/current"
         )
@@ -148,7 +154,7 @@ class Healthbox3():
 
         url: str = f"http://{self.host}{endpoint}"
 
-        _LOGGER.debug(f"{method}, {url}, {data}")
+        # _LOGGER.debug(f"{method}, {url}, {data}")
 
         try:
             async with async_timeout.timeout(self._request_timeout):
@@ -158,7 +164,7 @@ class Healthbox3():
                     headers=headers,
                     json=data
                 )
-                _LOGGER.debug("%s, %s", response.status, await response.text("utf-8"))
+                # _LOGGER.debug("%s, %s", response.status, await response.text("utf-8"))
                 if response.status in (401, 403):
                     raise Healthbox3ApiClientAuthenticationError(
                         "Invalid credentials",
