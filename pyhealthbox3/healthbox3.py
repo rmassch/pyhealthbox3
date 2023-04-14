@@ -112,6 +112,7 @@ class Healthbox3():
         if self._api_key:
             already_valid = False
             if pre_validation:
+                _LOGGER.debug("Pre validating advanced API to check if already enabled.")
                 already_valid = await self._async_validate_advanced_api_features()
             if not already_valid:
                 _LOGGER.debug("Enabling Advanced API.")
