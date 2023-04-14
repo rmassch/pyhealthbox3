@@ -122,7 +122,7 @@ class Healthbox3():
                     data=f"{self._api_key}",
                     expect_json_error=True,
                 )
-                await asyncio.sleep(5)
+                await asyncio.sleep(10)
                 if await self._async_validate_advanced_api_features() == False:
                     await self.close()
                     raise Healthbox3ApiClientAuthenticationError
