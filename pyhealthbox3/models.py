@@ -172,6 +172,21 @@ class Healthbox3Room:
             return None
 
 
+class Healthbox3WIFIConnectionDataObject:
+    """Healthbox3 Connection Data Object."""
+
+    status: str = None
+    internet_connection: str = None
+    ssid: str = None
+    connection_error: str = None
+
+    def __init__(self, status: str = None, internet_connection: str = None, ssid: str = None, connection_error: str = None) -> None:
+
+        self.status = status
+        self.internet_connection = internet_connection
+        self.ssid = ssid
+        self.connection_error = connection_error
+
 
 
 class Healthbox3DataObject:
@@ -182,8 +197,13 @@ class Healthbox3DataObject:
     warranty_number: str
 
     global_aqi: float = None
+    firmware_version: str = None
+    app_version: str = None
+    error_count: int = None
 
     rooms: list[Healthbox3Room]
+
+    wifi: Healthbox3WIFIConnectionDataObject = Healthbox3WIFIConnectionDataObject()
 
     def __init__(self, data: any, advanced_features: bool = False) -> None:
         """Initialize."""

@@ -9,7 +9,7 @@ import async_timeout
 
 import logging
 
-from .models import Healthbox3DataObject, Healthbox3Room, Healthbox3RoomBoost
+from .models import Healthbox3DataObject, Healthbox3Room, Healthbox3RoomBoost, Healthbox3WIFIConnectionDataObject
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,13 +57,28 @@ class Healthbox3():
     
     @property
     def global_aqi(self) -> float:
-        """Return the global air quality index"""
+        """Return the global air quality index."""
         return self._data.global_aqi
+    
+    @property
+    def error_count(self) -> int:
+        """Return the device error count."""
+        return self._data.error_count
     
     @property
     def rooms(self) -> list[Healthbox3Room]:
         """Return all HB3 rooms"""
         return self._data.rooms
+    
+    @property
+    def firmware_version(self) -> str:
+        """Return the Firmware Version."""
+        return self._data.firmware_version
+    
+    @property
+    def wifi(self) -> Healthbox3WIFIConnectionDataObject:
+        """Return the WiFi Data."""
+        return self._data.wifi
 
     async def async_get_data(self) -> any:
         """Get data from the API."""
@@ -71,8 +86,20 @@ class Healthbox3():
             method=METH_GET, endpoint="/v2/api/data/current"
         )
         self._data = Healthbox3DataObject(general_data, advanced_features=self._advanced_features)
+        await self._async_get_errors()
+        await self._async_get_global_core_data()
+        await self._async_get_wifi_status()
+        # await self._async_packages_data()
         for room in self._data.rooms:
             _LOGGER.debug(f"Found room: {room.name}")
+            _LOGGER.debug(f"\tAirflow Ventilation Rate: {room.airflow_ventilation_rate}")
+            _LOGGER.debug(f"\tAQI: {room.indoor_aqi}")
+            _LOGGER.debug(f"\tCO²: {room.indoor_co2_concentration}")
+            _LOGGER.debug(f"\tHumidity: {room.indoor_humidity}")
+            _LOGGER.debug(f"\tTemperature: {room.indoor_temperature}")
+            _LOGGER.debug(f"\tVOC PPM: {room.indoor_voc_ppm}")
+            _LOGGER.debug(f"\tVOC µg/m³: {room.indoor_voc_microg_per_cubic}")
+
             room.boost = await self.async_get_room_boost_data(room_id=room.room_id)
         return general_data
 
@@ -106,6 +133,84 @@ class Healthbox3():
         except:
             return Healthbox3RoomBoost()
         
+    async def _async_get_errors(self) -> list[dict] | None:
+        """Get errors from the API."""
+        try:
+            _LOGGER.debug("Retreiving errors")
+            data = await self.request(
+                method=METH_GET, endpoint=f"/v2/device/error"
+            )
+            self._data.error_count = len(data)
+            return data
+        except:
+            return None  
+        finally:
+            _LOGGER.debug(f"\tError Count: {self._data.error_count}")
+
+    async def _async_get_global_core_data(self) -> dict | None:
+        """Get global core data from the API."""
+        try:
+            
+            _LOGGER.debug("Retreiving core data")
+            data = await self.request(
+                method=METH_GET, endpoint=f"/renson_core/v2/global"
+            )
+            if "firmware version" in data:
+                self._data.firmware_version = data["firmware version"]
+            return data
+        except:
+            return None  
+        finally:
+            _LOGGER.debug(f"\tFirmware Version: {self._data.firmware_version}")
+
+    async def _async_get_wifi_status(self) -> Healthbox3WIFIConnectionDataObject | None:
+        """Get WiFi status from the API."""
+        try:
+            
+            _LOGGER.debug("Retreiving WiFi Status data")
+            data = await self.request(
+                method=METH_GET, endpoint=f"/renson_core/v1/wifi/client/status"
+            )
+            wifi_data = Healthbox3WIFIConnectionDataObject()
+
+            wifi_data.status = data["status"] if "status" in data else None
+            wifi_data.internet_connection = data["internet_connection"] if "internet_connection" in data else None
+            wifi_data.ssid = data["ssid"] if "ssid" in data else None
+            wifi_data.connection_error = data["connection_error"] if "connection_error" in data else None
+            
+            self._data.wifi = wifi_data
+
+            return wifi_data
+        except:
+            return None  
+        finally:
+            _LOGGER.debug(f"\tStatus: {self._data.wifi.status}")
+            _LOGGER.debug(f"\tInternet Connection: {self._data.wifi.internet_connection}")
+            _LOGGER.debug(f"\tSSID: {self._data.wifi.ssid}")
+            _LOGGER.debug(f"\tConnection Error: {self._data.wifi.status}")
+
+    # async def _async_packages_data(self) -> dict | None:
+    #     """Get packages data from the API."""
+    #     try:
+            
+    #         _LOGGER.debug("Retreiving packages data")
+    #         data = await self.request(
+    #             method=METH_GET, endpoint=f"/renson_core/v1/packages"
+    #         )
+    #         if "installed" in data:
+    #             active_app_version = [d for d in data["installed"] if d["version_active"] == True and d["name"] == "APP_hb3"]
+    #             if len(active_app_version) == 1:
+    #                 version_object = active_app_version[0]["version"]
+    #                 version_object = map(str, version_object)
+                    
+    #                 version = ".".join(version_object) + f"_{ active_app_version[0]['date']}"
+    #                 self._data.app_version = version
+    #         return data
+    #     except Exception as e:
+    #         print(e)
+    #         return None  
+    #     finally:
+    #         _LOGGER.debug(f"\tFirmware Version: {self._data.firmware_version}")
 
     async def async_enable_advanced_api_features(self, pre_validation: bool = True):
         """Enable advanced API Features."""
