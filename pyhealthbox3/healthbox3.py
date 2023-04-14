@@ -107,10 +107,12 @@ class Healthbox3():
             return Healthbox3RoomBoost()
         
 
-    async def async_enable_advanced_api_features(self):
+    async def async_enable_advanced_api_features(self, pre_validation: bool = True):
         """Enable advanced API Features."""
         if self._api_key:
-            already_valid = await self._async_validate_advanced_api_features()
+            already_valid = False
+            if pre_validation:
+                already_valid = await self._async_validate_advanced_api_features()
             if not already_valid:
                 _LOGGER.debug("Enabling Advanced API.")
                 await self.request(
