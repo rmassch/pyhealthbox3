@@ -9,7 +9,7 @@ import async_timeout
 
 import logging
 
-from .models import Healthbox3DataObject, Healthbox3Room, Healthbox3RoomBoost, Healthbox3WIFIConnectionDataObject
+from .models import Healthbox3DataObject, Healthbox3Room, Healthbox3RoomBoost, Healthbox3WIFIConnectionDataObject, Healthbox3FanDataObject
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +80,11 @@ class Healthbox3():
         """Return the WiFi Data."""
         return self._data.wifi
 
+    @property
+    def fan(self) -> Healthbox3FanDataObject:
+        """Return the Fan Data."""
+        return self._data.fan
+
     async def async_get_data(self) -> any:
         """Get data from the API."""
         general_data = await self.request(
@@ -89,6 +94,7 @@ class Healthbox3():
         await self._async_get_errors()
         await self._async_get_global_core_data()
         await self._async_get_wifi_status()
+        await self._async_get_fan_status()
         # await self._async_packages_data()
         for room in self._data.rooms:
             _LOGGER.debug(f"Found room: {room.name}")
@@ -188,6 +194,34 @@ class Healthbox3():
             _LOGGER.debug(f"\tInternet Connection: {self._data.wifi.internet_connection}")
             _LOGGER.debug(f"\tSSID: {self._data.wifi.ssid}")
             _LOGGER.debug(f"\tConnection Error: {self._data.wifi.status}")
+
+    async def _async_get_fan_status(self) -> Healthbox3FanDataObject | None:
+        """Get Fan status from the API."""
+        try:
+
+            _LOGGER.debug("Retreiving Fan Status data")
+            data = await self.request(
+                method=METH_GET, endpoint=f"/v2/device/fan"
+            )
+            fan_data = Healthbox3FanDataObject()
+
+            fan_data.voltage = data["voltage"] if "voltage" in data else None
+            fan_data.pressure = data["pressure"] if "pressure" in data else None
+            fan_data.flow = data["flow"] if "flow" in data else None
+            fan_data.power = data["power"] if "power" in data else None
+            fan_data.rpm = data["rpm"] if "rpm" in data else None
+
+            self._data.fan = fan_data
+
+            return fan_data
+        except:
+            return None
+        finally:
+            _LOGGER.debug(f"\tVoltage: {self._data.fan.voltage}")
+            _LOGGER.debug(f"\tPressure: {self._data.fan.pressure}")
+            _LOGGER.debug(f"\tFlow: {self._data.fan.flow}")
+            _LOGGER.debug(f"\tPower: {self._data.fan.power}")
+            _LOGGER.debug(f"\tRPM: {self._data.fan.rpm}")
 
     # async def _async_packages_data(self) -> dict | None:
     #     """Get packages data from the API."""
