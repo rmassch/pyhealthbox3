@@ -188,6 +188,24 @@ class Healthbox3WIFIConnectionDataObject:
         self.connection_error = connection_error
 
 
+class Healthbox3FanDataObject:
+    """Healthbox3 Fan Data Object."""
+
+    voltage: float = None
+    pressure: float = None
+    flow: float = None
+    power: float = None
+    rpm: int = None
+
+    def __init__(self, voltage: float = None, pressure: float = None, flow: float = None, power: float = None, rpm: int = None) -> None:
+
+        self.voltage = voltage
+        self.pressure = pressure
+        self.flow = flow
+        self.power = power
+        self.rpm = rpm
+
+
 
 class Healthbox3DataObject:
     """Healthbox3 Data Object."""
@@ -204,6 +222,8 @@ class Healthbox3DataObject:
     rooms: list[Healthbox3Room]
 
     wifi: Healthbox3WIFIConnectionDataObject = Healthbox3WIFIConnectionDataObject()
+
+    fan: Healthbox3FanDataObject = Healthbox3FanDataObject()
 
     def __init__(self, data: any, advanced_features: bool = False) -> None:
         """Initialize."""
