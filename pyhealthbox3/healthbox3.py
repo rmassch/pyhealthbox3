@@ -109,6 +109,17 @@ class Healthbox3():
             room.boost = await self.async_get_room_boost_data(room_id=room.room_id)
         return general_data
 
+    async def async_change_room_profile(
+        self, room_id: int, profile_name
+    ) -> any:
+        """Change HB3 Room Profile"""
+        data = f"{profile_name}".lower()
+        await self.request(
+            method=METH_PUT,
+            endpoint=f"/v2/api/data/current/room/{room_id}/profile_name",
+            data=data,
+        )
+
     async def async_start_room_boost(
         self, room_id: int, boost_level: int, boost_timeout: int
     ) -> any:
